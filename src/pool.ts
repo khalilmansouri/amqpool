@@ -37,7 +37,7 @@ class ConnectionPool {
 
   // get a connection
   async getConnection(): Promise<Connection> {
-    return await this.pool.acquire()
+    return await this.pool.acquire(1)
   }
 
 
