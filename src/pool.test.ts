@@ -41,3 +41,27 @@ describe("Multipe connection", () => {
     await con3.close()
   })
 })
+
+
+describe("Channels", () => {
+  it("Should create a channnel per connection", async () => {
+    let max = 2
+    let min = 1
+    let channnel = "pipe"
+    let connectionPool = new ConnectionPool({ name: "rabbitPool", url: "amqp://127.0.0.1", poolOptions: { max, min } })
+
+    let sender = await connectionPool.getConnection()
+    let receiver = await connectionPool.getConnection()
+
+    let rch = await receiver.createChannel()
+    await rch.assertQueue(channnel)
+    rch.consume(channnel, (msg) => {
+      console.log(msg?.content.toString())
+    })
+
+    let sch = await sender.createChannel()
+    await sch.assertQueue(channnel)
+    await sch.sendToQueue(channnel, Buffer.from("What's up slupper's"))
+
+  })
+})
