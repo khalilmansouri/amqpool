@@ -41,3 +41,35 @@ describe("Multipe connection", () => {
     await con3.close()
   })
 })
+
+
+describe("Channels", () => {
+  it("Should message be received", async () => {
+    let max = 2
+    let min = 1
+    let channnel = "songs"
+    let connectionPool1 = new ConnectionPool({ name: "pool1", url: "amqp://127.0.0.1", poolOptions: { max, min } })
+
+
+    let connectionPool2 = new ConnectionPool({ name: "pool2", url: "amqp://127.0.0.1", poolOptions: { max, min } })
+
+    let sender = await connectionPool1.getConnection()
+    let receiver = await connectionPool2.getConnection()
+
+    let rch = await receiver.createChannel()
+
+    await rch.assertQueue(channnel)
+
+    rch.consume(channnel, (msg) => {
+      expect(msg?.content.toString()).to.equal("pop")
+    })
+
+    let sch = await sender.createChannel()
+    await sch.assertQueue(channnel)
+    await sch.sendToQueue(channnel, Buffer.from("pop"))
+
+    await sender.close()
+    await receiver.close()
+
+  })
+})
